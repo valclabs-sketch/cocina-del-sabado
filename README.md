@@ -2,12 +2,14 @@
 
 App de la familia para comer balanceado, bajar grasa y ganar músculo sin salirse del presupuesto del mercado.
 Funciona en el celular y en el computador, y se instala como app con su propio ícono.
+Solo se ve después de iniciar sesión, y solo con los correos de la familia.
 
 **App:** <https://valclabs-sketch.github.io/cocina-del-sabado/>
 
 ## Qué hace
 - **Hoy:** el plan del día de cada persona, hora por hora. El de él cambia según la hora a la que entrene; el de ella está pensado para el cardio de la noche; la niña come lo mismo en porción de su tamaño, sin dieta.
 - **Almuerzo de la semana:** 8 recetas que se congelan bien, con calorías, proteína, costo por porción, pasos del sábado, número de recipientes y gramos a comprar.
+- **Sustitutos:** si no consiguen un ingrediente, cada uno tiene un menú «¿No hay? Cambiar por…». La cantidad se recalcula para mantener la proteína o los carbohidratos, y los pasos del sábado dicen cómo cocinar el reemplazo.
 - **Mercado:** lista completa (almuerzo + desayunos, cenas y meriendas), total contra el presupuesto, casillas para ir marcando en el supermercado y botón para copiar la lista a WhatsApp.
 - **Progreso:** peso y cintura semanales de los dos adultos, con gráfica.
 - **Familia y metas:** calorías (−20 %), proteína y rango de peso saludable de cada adulto.
@@ -23,7 +25,7 @@ Usa el mismo proyecto de Supabase del Tablero ValClabs, con una tabla aparte.
 Solo los correos de la tabla `cocina_familia` pueden ver o cambiar estos datos.
 > Ojo: una cuenta nueva en este proyecto de Supabase también puede abrir el Tablero ValClabs, porque el Tablero deja entrar a cualquier usuario con sesión. Si no quieres eso, crea un proyecto de Supabase aparte para la familia y cambia `config.js`.
 
-Mientras no completes los pasos, la app funciona igual pero guarda los datos solo en ese celular.
+Mientras no completes los pasos, la app pide iniciar sesión y no muestra nada más.
 
 ## Instalar en el celular
 - **iPhone:** abre la dirección en Safari → **Compartir** → **Agregar a pantalla de inicio**.

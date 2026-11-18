@@ -1,5 +1,5 @@
 // Service worker: permite instalar la app y abrirla sin internet.
-const CACHE = "cocina-sabado-v1";
+const CACHE = "cocina-sabado-v2";
 const SHELL = ["./", "index.html", "config.js", "manifest.webmanifest", "assets/icon-192.png", "assets/icon-512.png", "assets/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

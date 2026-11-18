@@ -54,6 +54,12 @@ header.top{display:flex;align-items:center;justify-content:space-between;gap:12p
 button.sync{font-weight:600;cursor:pointer}
 .sync.cta{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);text-decoration:underline;font-weight:700}
+.gate{display:flex;flex-direction:column;gap:14px;max-width:440px;margin:28px auto 0}
+.gate .card{gap:14px}
+.sub{font-size:13px;padding:4px 8px;margin-top:6px;max-width:100%;border-color:var(--line);color:var(--accent);font-weight:600}
+.sub.mini{font-size:12.5px;padding:3px 6px;margin-top:4px}
+tr.swapped td:first-child b{color:var(--accent)}
+.it label.nm{cursor:pointer}
 .steps-inst{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin-top:14px;border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 nav.tabs a{flex:none;padding:12px 12px 10px;color:var(--muted);text-decoration:none;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
@@ -147,9 +153,9 @@ ul.tips{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
       <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="11" width="34" height="23" rx="6" fill="none" stroke="var(--accent)" stroke-width="3"/><rect x="1" y="7" width="38" height="6" rx="3" fill="var(--accent)"/><path d="M14 22h12" stroke="var(--carb)" stroke-width="3" stroke-linecap="round"/></svg>
       <div><h1>Cocina del Sábado</h1><p class="muted small">Plan de comidas de la familia: 2 adultos y una niña</p></div>
     </div>
-    <div class="row"><button id="install" class="sync" data-act="installopen" hidden>Instalar app</button><button id="sync" class="sync" data-act="account">Conectando…</button></div>
+    <div class="row"><button id="install" class="sync" data-act="installopen" hidden>Instalar app</button><button id="sync" class="sync" data-act="account" hidden>Conectando…</button></div>
   </header>
-  <nav class="tabs" aria-label="Secciones">
+  <nav class="tabs" aria-label="Secciones" hidden>
     <a href="#hoy" data-tab="hoy">Hoy</a>
     <a href="#almuerzo" data-tab="almuerzo">Almuerzo de la semana</a>
     <a href="#mercado" data-tab="mercado">Mercado</a>
@@ -190,7 +196,53 @@ const ING = {
   arveja:{n:'Arveja (congelada)',k:81,p:5.4,c:14,f:.4,price:9000,cat:'Verdura'},
   espinaca:{n:'Espinaca',k:23,p:2.9,c:3.6,f:.4,price:12000,cat:'Verdura'},
   repollo:{n:'Repollo',k:25,p:1.3,c:6,f:.1,price:2500,cat:'Verdura'},
-  aceite:{n:'Aceite vegetal',k:884,p:0,c:0,f:100,price:10000,cat:'Despensa'}
+  aceite:{n:'Aceite vegetal',k:884,p:0,c:0,f:100,price:10000,cat:'Despensa'},
+  // Sustitutos (aparecen cuando no se consigue un ingrediente)
+  muslo:{n:'Muslo de pollo sin piel',k:120,p:19.5,c:0,f:4.3,price:13000,cat:'Proteína'},
+  pollomolido:{n:'Pechuga de pollo molida',k:120,p:23,c:0,f:2.6,price:19000,cat:'Proteína'},
+  res:{n:'Carne de res magra en cubos',k:150,p:21,c:0,f:7,price:30000,cat:'Proteína'},
+  tilapia:{n:'Tilapia (filete)',k:96,p:20,c:0,f:1.7,price:22000,cat:'Proteína'},
+  atun:{n:'Atún en agua (escurrido)',k:116,p:26,c:0,f:1,price:34000,cat:'Proteína'},
+  arrozint:{n:'Arroz integral',k:362,p:7.5,c:76,f:2.7,price:8000,cat:'Granos'},
+  panrallado:{n:'Pan rallado',k:395,p:13,c:72,f:5,price:10000,cat:'Granos'},
+  yuca:{n:'Yuca',k:160,p:1.4,c:38,f:.3,price:3000,cat:'Verdura'},
+  guatila:{n:'Guatila (cidra)',k:19,p:.8,c:4.5,f:.1,price:3000,cat:'Verdura'},
+  coliflor:{n:'Coliflor',k:25,p:1.9,c:5,f:.3,price:7000,cat:'Verdura'},
+  acelga:{n:'Acelga',k:19,p:1.8,c:3.7,f:.2,price:6000,cat:'Verdura'},
+  tomatesalsa:{n:'Tomate triturado (caja)',k:30,p:1.5,c:6,f:.2,price:9000,cat:'Verdura'},
+  cebollalarga:{n:'Cebolla larga',k:32,p:1.8,c:7,f:.2,price:5000,cat:'Verdura'},
+  aceiteoliva:{n:'Aceite de oliva',k:884,p:0,c:0,f:100,price:35000,cat:'Despensa'}
+};
+// Qué se puede usar si no hay un ingrediente. La cantidad se recalcula sola:
+// proteínas por gramos de proteína, granos y harinas por carbohidrato, verduras gramo a gramo.
+const SUBS = {
+  pollo:['muslo','cerdo','tilapia','res','atun'], carne:['pollomolido','cerdo'], cerdo:['pollo','muslo','res'], basa:['tilapia','pollo','atun'],
+  huevo:['avena'], avena:['panrallado'],
+  lenteja:['frijol','garbanzo'], frijol:['lenteja','garbanzo'], garbanzo:['lenteja','frijol'],
+  arroz:['arrozint','papa','yuca','pasta'], pasta:['arroz','arrozint','papa'], papa:['yuca','arroz','platano'], platano:['papa','yuca'],
+  ahuyama:['zanahoria','guatila','calabacin'], habichuela:['brocoli','calabacin','arveja','coliflor'], brocoli:['coliflor','habichuela','calabacin','repollo'],
+  zanahoria:['ahuyama','guatila'], tomate:['tomatesalsa'], cebolla:['cebollalarga'], pimenton:['cebolla','tomate'], calabacin:['guatila','ahuyama','brocoli'],
+  arveja:['habichuela','zanahoria'], espinaca:['acelga','repollo','brocoli'], repollo:['habichuela','zanahoria','coliflor'], aceite:['aceiteoliva']
+};
+const HINTS = {
+  muslo:'El muslo necesita 5–10 min más que la pechuga; quítale la grasa visible.',
+  pollo:'La pechuga se cocina en unos 20 min.',
+  pollomolido:'El pollo molido se dora en 8 min, igual que la carne molida.',
+  cerdo:'El cerdo necesita unos 25 min, hasta que no quede rosado por dentro.',
+  res:'La res en cubos necesita 40–50 min (20 en olla a presión) para ablandar.',
+  tilapia:'El pescado va al final: 8–10 min para que no se deshaga.',
+  atun:'El atún no se cocina: escúrrelo y mézclalo al final, fuera del fuego.',
+  arrozint:'El arroz integral lleva 2½ tazas de agua por taza y unos 40 min.',
+  arroz:'El arroz blanco lleva 2 tazas de agua por taza y 20 min.',
+  papa:'La papa va en cubos cocida 20 min, o en puré.',
+  yuca:'La yuca se cocina 30 min hasta que abra; quítale la vena del centro.',
+  pasta:'La pasta se cocina 2 min menos de lo que dice el paquete.',
+  platano:'El maduro va en tajadas al horno 20 min.',
+  lenteja:'Las lentejas no necesitan remojo: 25 min de cocción.',
+  frijol:'Los fríjoles se remojan desde el viernes y van 40 min en olla a presión.',
+  garbanzo:'Los garbanzos se remojan desde el viernes y van 40 min en olla a presión.',
+  panrallado:'Usa el pan rallado igual que la avena, para unir las albóndigas.',
+  avena:'Sin huevo, suma la avena y un chorrito de agua para que las albóndigas se unan.'
 };
 // Gramos por porción de ADULTO. La niña come una fracción (ajustable).
 const RECIPES = [
@@ -229,23 +281,23 @@ const RECIPES = [
 ];
 // Lo que se compra para desayunos, cenas y meriendas de la semana (3 personas).
 const STAPLES = [
- {id:'huevos',n:'Huevos',qty:30,u:'unid',price:570,cat:'Lácteos y huevos'},
- {id:'leche',n:'Leche semidescremada',qty:6,u:'L',price:4300,cat:'Lácteos y huevos'},
- {id:'yogur',n:'Yogur natural sin azúcar',qty:1,u:'L',price:9000,cat:'Lácteos y huevos'},
- {id:'queso',n:'Queso campesino',qty:.5,u:'kg',price:24000,cat:'Lácteos y huevos'},
- {id:'pollocena',n:'Pechuga para cenas',qty:1,u:'kg',price:18000,cat:'Proteína'},
- {id:'atun',n:'Atún en agua',qty:4,u:'lata',price:5500,cat:'Proteína'},
- {id:'arepas',n:'Arepas de maíz (paq. x10)',qty:2,u:'paq',price:5500,cat:'Panadería y granos'},
- {id:'pan',n:'Pan integral tajado',qty:1,u:'paq',price:7500,cat:'Panadería y granos'},
- {id:'avenaD',n:'Avena para desayunos',qty:.5,u:'kg',price:9000,cat:'Panadería y granos'},
- {id:'mani',n:'Maní sin sal',qty:.25,u:'kg',price:24000,cat:'Panadería y granos'},
- {id:'banano',n:'Banano',qty:2,u:'kg',price:3200,cat:'Frutas y verduras'},
- {id:'fruta',n:'Fruta de temporada (papaya, piña, guayaba)',qty:3,u:'kg',price:4000,cat:'Frutas y verduras'},
- {id:'lechuga',n:'Lechuga',qty:1,u:'unid',price:3000,cat:'Frutas y verduras'},
- {id:'pepino',n:'Pepino',qty:1,u:'kg',price:3500,cat:'Frutas y verduras'},
- {id:'tomateC',n:'Tomate para ensaladas',qty:1,u:'kg',price:4500,cat:'Frutas y verduras'},
- {id:'ahuyamaC',n:'Ahuyama para cremas',qty:1,u:'kg',price:3000,cat:'Frutas y verduras'},
- {id:'limon',n:'Limón',qty:1,u:'kg',price:4000,cat:'Frutas y verduras'},
+ {id:'huevos',n:'Huevos',qty:30,u:'unid',price:570,cat:'Lácteos y huevos',alts:[{n:'Huevos AA (más grandes)',price:650}]},
+ {id:'leche',n:'Leche semidescremada',qty:6,u:'L',price:4300,cat:'Lácteos y huevos',alts:[{n:'Leche deslactosada',price:4600},{n:'Leche en polvo (rinde 1 L)',price:3800}]},
+ {id:'yogur',n:'Yogur natural sin azúcar',qty:1,u:'L',price:9000,cat:'Lácteos y huevos',alts:[{n:'Kumis sin azúcar',price:8000},{n:'Yogur griego natural',price:14000}]},
+ {id:'queso',n:'Queso campesino',qty:.5,u:'kg',price:24000,cat:'Lácteos y huevos',alts:[{n:'Cuajada',price:18000},{n:'Quesito',price:20000},{n:'Queso mozzarella',price:30000}]},
+ {id:'pollocena',n:'Pechuga para cenas',qty:1,u:'kg',price:18000,cat:'Proteína',alts:[{n:'Muslo de pollo sin piel',price:13000},{n:'Bistec de res magro',price:28000}]},
+ {id:'atun',n:'Atún en agua',qty:4,u:'lata',price:5500,cat:'Proteína',alts:[{n:'Sardinas en salsa de tomate',price:4500}]},
+ {id:'arepas',n:'Arepas de maíz (paq. x10)',qty:2,u:'paq',price:5500,cat:'Panadería y granos',alts:[{n:'Pan integral tajado',price:7500},{n:'Tortillas de maíz',price:6000}]},
+ {id:'pan',n:'Pan integral tajado',qty:1,u:'paq',price:7500,cat:'Panadería y granos',alts:[{n:'Arepas de maíz (paq. x10)',price:5500},{n:'Tostadas integrales',price:6500}]},
+ {id:'avenaD',n:'Avena para desayunos',qty:.5,u:'kg',price:9000,cat:'Panadería y granos',alts:[{n:'Granola sin azúcar',price:18000}]},
+ {id:'mani',n:'Maní sin sal',qty:.25,u:'kg',price:24000,cat:'Panadería y granos',alts:[{n:'Semillas de girasol',price:20000},{n:'Mezcla de nueces',price:40000}]},
+ {id:'banano',n:'Banano',qty:2,u:'kg',price:3200,cat:'Frutas y verduras',alts:[{n:'Manzana',price:6000},{n:'Mandarina',price:4000}]},
+ {id:'fruta',n:'Fruta de temporada (papaya, piña, guayaba)',qty:3,u:'kg',price:4000,cat:'Frutas y verduras',alts:[{n:'Mango',price:4500},{n:'Guayaba',price:3500},{n:'Piña',price:3000}]},
+ {id:'lechuga',n:'Lechuga',qty:1,u:'unid',price:3000,cat:'Frutas y verduras',alts:[{n:'Repollo',price:2500},{n:'Espinaca (atado)',price:3500}]},
+ {id:'pepino',n:'Pepino',qty:1,u:'kg',price:3500,cat:'Frutas y verduras',alts:[{n:'Calabacín',price:6000},{n:'Rábano',price:4000}]},
+ {id:'tomateC',n:'Tomate para ensaladas',qty:1,u:'kg',price:4500,cat:'Frutas y verduras',alts:[{n:'Zanahoria',price:3000},{n:'Pimentón',price:7000}]},
+ {id:'ahuyamaC',n:'Ahuyama para cremas',qty:1,u:'kg',price:3000,cat:'Frutas y verduras',alts:[{n:'Zanahoria',price:3000},{n:'Guatila',price:3000}]},
+ {id:'limon',n:'Limón',qty:1,u:'kg',price:4000,cat:'Frutas y verduras',alts:[{n:'Naranja',price:3500}]},
  {id:'varios',n:'Café, especias, ajo, sal',qty:1,u:'varios',price:8000,cat:'Despensa'}
 ];
 const DESAYUNOS = ['Huevos pericos + arepa + fruta','Avena cocida con leche, banano y canela + 1 huevo duro','Pan integral con queso campesino + huevo + fruta','Yogur natural con avena, banano y unos maníes','Huevos pericos + arepa + fruta','Avena cocida con leche y banano + 1 huevo duro','Arepa con queso y huevo + fruta'];
@@ -270,14 +322,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const S = { cfg: clone(DEFAULT_CFG), buy:{checks:{}}, prog:{entries:[]} };
 const LS = 'cocina-sabado-v1';
 try { const raw = localStorage.getItem(LS); if (raw) { const d = JSON.parse(raw); for (const k of ['cfg','buy','prog']) if (d[k]) S[k] = k==='cfg' ? {...clone(DEFAULT_CFG), ...d[k]} : d[k]; } } catch(e) {}
-const ui = { tab:'hoy', person:'a1', train: 'tarde', detail:false, account:false, recover:false, skipLogin:false };
+const ui = { tab:'hoy', person:'a1', train: 'tarde', detail:false, account:false, recover:false, signup:false, swap:null };
 try { const u = JSON.parse(localStorage.getItem(LS+'-ui')||'{}'); Object.assign(ui, u); } catch(e) {}
 function saveUi(){ try{ localStorage.setItem(LS+'-ui', JSON.stringify({person:ui.person,train:ui.train})) }catch(e){} }
 
 /* ============ Datos compartidos (Supabase) ============ */
 // Tabla cocina_docs: una fila por documento ('cfg', 'buy', 'prog'). Ver supabase/schema.sql.
 const CONF = window.COCINA_CONFIG || {};
-let sb = null, user = null, cloud = false, channel = null, syncMode = 'local';
+let sb = null, user = null, cloud = false, channel = null, syncMode = 'local', authReady = false, loadedOnce = false;
 const last = {}; const timers = {}; const busy = {}; const again = {};
 function cacheLocal(){ try{ localStorage.setItem(LS, JSON.stringify(S)) }catch(e){} }
 function queue(key){ cacheLocal(); clearTimeout(timers[key]); timers[key] = setTimeout(() => flush(key), 700); }
@@ -332,16 +384,18 @@ async function startCloud(){
   channel = sb.channel('cocina')
     .on('postgres_changes', { event:'*', schema:'public', table:'cocina_docs' }, p => { if (p.new && p.new.key) applyRemote(p.new.key, p.new.data); })
     .subscribe();
-  setSync('on'); render();
+  loadedOnce = true; setSync('on'); render();
 }
 (async () => {
-  if (!(CONF.SUPABASE_URL && CONF.SUPABASE_ANON_KEY && window.supabase)) { setSync('local'); return; }
+  if (!(CONF.SUPABASE_URL && CONF.SUPABASE_ANON_KEY && window.supabase)) { authReady = true; setSync('local'); render(); return; }
   sb = window.supabase.createClient(CONF.SUPABASE_URL, CONF.SUPABASE_ANON_KEY, { auth: { storageKey: 'cocina-sabado-auth', persistSession: true } });
   const { data } = await sb.auth.getSession();
   user = data.session ? data.session.user : null;
+  authReady = true;
+  if (user && localStorage.getItem(LS)) loadedOnce = true; // hay datos guardados de esta sesión para abrir sin internet
   sb.auth.onAuthStateChange((ev, session) => {
     const u = session ? session.user : null;
-    if ((u && u.id) !== (user && user.id)) { user = u; startCloud(); }
+    if ((u && u.id) !== (user && user.id)) { user = u; if (!u) loadedOnce = false; startCloud(); }
     if (ev === 'PASSWORD_RECOVERY') { ui.account = true; ui.recover = true; render(); }
   });
   startCloud();
@@ -371,9 +425,25 @@ const priceOf = id => +(S.cfg.prices[id] ?? ING[id].price);
 const recipe = () => RECIPES.find(r => r.id===S.cfg.lunchId) || RECIPES[0];
 function money(v){ try { return new Intl.NumberFormat(CUR[S.cfg.currency]||'es-CO',{style:'currency',currency:S.cfg.currency,maximumFractionDigits:S.cfg.currency==='USD'||S.cfg.currency==='EUR'?2:0}).format(v) } catch(e){ return Math.round(v) } }
 function grams(g){ return g>=1000 ? (g/1000).toLocaleString('es-CO',{maximumFractionDigits:1})+' kg' : Math.round(g)+' g' }
+function convert(orig, to, g){
+  const a = ING[orig], b = ING[to];
+  let out = g;
+  if (a.cat==='Proteína' && b.p) out = g * a.p / b.p;
+  else if (a.c > 12 && b.c > 12) out = g * a.c / b.c;
+  return Math.max(5, Math.round(out/5)*5);
+}
+function subOf(r, orig){ const t = ((S.cfg.subs||{})[r.id]||{})[orig]; return t && ING[t] ? t : null; }
+function itemsOf(r){ return Object.entries(r.items).map(([orig,g]) => { const t = subOf(r, orig); return t ? {orig, id:t, g:convert(orig,t,g)} : {orig, id:orig, g}; }); }
+function subSelect(r, orig, cls){
+  const opts = SUBS[orig]; if (!opts) return '';
+  const cur = subOf(r, orig) || orig;
+  return `<select class="sub ${cls||''}" id="sub-${r.id}-${orig}" data-act="sub" data-rid="${r.id}" data-ing="${orig}" aria-label="Cambiar ${ING[orig].n}">
+    <option value="${orig}" ${cur===orig?'selected':''}>${cur===orig?'¿No hay? Cambiar por…':'Volver a: '+ING[orig].n}</option>
+    ${opts.map(o=>`<option value="${o}" ${cur===o?'selected':''}>${ING[o].n}</option>`).join('')}</select>`;
+}
 function nutri(r){
   let k=0,p=0,c=0,f=0,cost=0;
-  for (const [id,g] of Object.entries(r.items)){ const i=ING[id]; k+=i.k*g/100; p+=i.p*g/100; c+=i.c*g/100; f+=i.f*g/100; cost+=priceOf(id)*g/1000; }
+  for (const {id,g} of itemsOf(r)){ const i=ING[id]; k+=i.k*g/100; p+=i.p*g/100; c+=i.c*g/100; f+=i.f*g/100; cost+=priceOf(id)*g/1000; }
   return {k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f),cost};
 }
 function portions(){ const a=adults().length, k=kids().length; return {perDay: a + k*S.cfg.childFactor, adultBoxes:a*S.cfg.days, kidBoxes:k*S.cfg.days, total:(a + k*S.cfg.childFactor)*S.cfg.days}; }
@@ -395,7 +465,29 @@ function targets(p){
 function bmiLabel(b){ return b<18.5?'Bajo peso':b<25?'Peso saludable':b<30?'Sobrepeso':'Obesidad' }
 
 /* ============ Render ============ */
+function gateView(){
+  const shell = inner => `<div class="gate"><div class="card stack">${inner}</div></div>`;
+  const out = `<div class="row"><button data-act="logout">Cerrar sesión</button></div>`;
+  if (!authReady) return `<div class="gate"><p class="muted">Cargando…</p></div>`;
+  if (!sb) return shell(`<h2>Falta configurar la app</h2><p>No hay conexión con la base de datos (archivo config.js), así que la app no se puede abrir.</p>`);
+  if (!user) return shell(`<h2>${ui.signup ? 'Crear cuenta' : 'Iniciar sesión'}</h2>
+    <p class="muted">Solo la familia puede ver este plan. ${ui.signup ? 'Usa el correo que quedó registrado en la lista de la familia.' : 'Si ya tienes cuenta del Tablero ValClabs, usa el mismo correo y contraseña.'}</p>
+    <label class="field"><span>Correo</span><input type="email" id="em" autocomplete="email" inputmode="email"></label>
+    <label class="field"><span>Contraseña</span><input type="password" id="pwd" autocomplete="${ui.signup?'new-password':'current-password'}"></label>
+    <div class="row">${ui.signup ? `<button class="primary" data-act="signup">Crear cuenta</button><button class="linkbtn" data-act="mode">Ya tengo cuenta</button>`
+      : `<button class="primary" data-act="login">Entrar</button><button class="linkbtn" data-act="mode">Crear cuenta</button><button class="linkbtn" data-act="forgot">Olvidé mi contraseña</button>`}</div>`) + `<div class="gate"><div class="card">${installBlock() || ''}</div></div>`;
+  if (ui.recover) return '';
+  if (syncMode==='nomember') return shell(`<h2>Este correo no está en la familia</h2><p>Entraste como <b>${esc(user.email)}</b>, pero ese correo no tiene permiso para ver Cocina del Sábado. Agrégalo a la tabla <b>cocina_familia</b> en Supabase (README, paso 1) y vuelve a abrir la app.</p>${out}`);
+  if (syncMode==='notable') return shell(`<h2>Falta preparar la base de datos</h2><p>En Supabase → SQL Editor, pega el archivo <b>supabase/schema.sql</b> del repositorio (con sus correos al final) y pulsa Run. Después vuelve a abrir la app.</p>${out}`);
+  if (!loadedOnce && (syncMode==='wait' || syncMode==='login')) return `<div class="gate"><p class="muted">Cargando los datos de la familia…</p></div>`;
+  if (!loadedOnce) return shell(`<h2>No se pudo conectar</h2><p>Revisa tu conexión a internet y vuelve a abrir la app.</p>${out}`);
+  return '';
+}
 function render(){
+  const gate = gateView();
+  document.querySelector('nav.tabs').hidden = !!gate;
+  document.getElementById('sync').hidden = !user;
+  if (gate) { document.getElementById('app').innerHTML = gate; const ib0 = document.getElementById('install'); if (ib0) ib0.hidden = true; return; }
   document.querySelectorAll('nav.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.tab===ui.tab?'page':'false'));
   const app = document.getElementById('app');
   const views = {hoy:vHoy, almuerzo:vAlmuerzo, mercado:vMercado, progreso:vProgreso, familia:vFamilia};
@@ -413,7 +505,6 @@ function installBlock(){
 }
 function accountPanel(){
   if (!ui.account) {
-    if (syncMode==='login' && !ui.skipLogin) return `<div class="banner" style="margin-top:16px"><div><b>Inicia sesión</b> para que los dos vean la misma lista de mercado, metas y progreso en sus celulares. <button class="linkbtn" data-act="account">Iniciar sesión</button> · <button class="linkbtn" data-act="skiplogin">Ahora no</button></div></div>`;
     return '';
   }
   let body = '';
@@ -542,10 +633,12 @@ function vAlmuerzo(){
   const kidF = S.cfg.childFactor;
   const cards = RECIPES.map(x => { const m = nutri(x); return `<button class="rc" data-act="lunch" data-id="${x.id}" aria-pressed="${x.id===r.id}"><span class="nm">${esc(x.name)}</span><span class="small muted">${x.prot} · ${x.time}</span><span class="small num"><b>${m.k}</b> kcal · <b style="color:var(--prot)">${m.p} g</b> prot. · ${money(m.cost)}/porción</span></button>`; }).join('');
   const totalKcal = n.p*4 + n.c*4 + n.f*9 || 1;
-  const rows = Object.entries(r.items).map(([id,g]) => {
+  const its = itemsOf(r);
+  const rows = its.map(({orig,id,g}) => {
     const tot = g*po.total; const i = ING[id];
     const unit = i.unitG ? ` <span class="muted">(≈ ${Math.ceil(tot/i.unitG)} unid)</span>` : '';
-    return `<tr><td>${i.n}</td><td class="r">${g} g</td><td class="r">${Math.round(g*kidF)} g</td><td class="r"><b>${grams(tot)}</b>${unit}</td><td class="r">${money(priceOf(id)*tot/1000)}</td></tr>`;
+    const swapped = id!==orig;
+    return `<tr${swapped?' class="swapped"':''}><td><b>${i.n}</b>${swapped?`<br><span class="small muted">en vez de ${ING[orig].n}</span>`:''}<br>${subSelect(r,orig)}</td><td class="r">${g} g</td><td class="r">${Math.round(g*kidF)} g</td><td class="r"><b>${grams(tot)}</b>${unit}</td><td class="r">${money(priceOf(id)*tot/1000)}</td></tr>`;
   }).join('');
   const boxes = Array.from({length:po.adultBoxes},()=>'<span class="box"></span>').join('') + Array.from({length:po.kidBoxes},()=>'<span class="box k"></span>').join('');
   const idx = RECIPES.findIndex(x=>x.id===r.id);
@@ -588,6 +681,7 @@ function vAlmuerzo(){
     </div>
     <div class="card stack">
       <h3>Pasos del sábado</h3>
+      ${its.some(x=>x.id!==x.orig) ? `<div class="banner"><div><b>Cambios de esta semana:</b><ul class="tips small" style="margin-top:4px">${its.filter(x=>x.id!==x.orig).map(x=>`<li>${ING[x.id].n} en vez de ${ING[x.orig].n.toLowerCase()}. ${HINTS[x.id]||'Se cocina igual.'}</li>`).join('')}</ul></div></div>` : ''}
       <ol class="steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
       <p class="note">${r.tip}</p>
     </div>
@@ -599,13 +693,22 @@ function vAlmuerzo(){
       <tbody>${rows}</tbody>
       <tfoot><tr><td colspan="4"><b>Total almuerzos de la semana</b></td><td class="r"><b>${money(n.cost*po.total)}</b></td></tr></tfoot>
     </table></div>
-    <p class="small muted">Pesos en crudo. Los granos (arroz, lentejas, fríjoles, garbanzos, pasta) se pesan secos.</p>
+    <p class="small muted">Pesos en crudo. Los granos (arroz, lentejas, fríjoles, garbanzos, pasta) se pesan secos. Si no consiguen un ingrediente, cámbienlo en su fila: la cantidad se ajusta para mantener la proteína o los carbohidratos.</p>
   </div>`;
 }
 function shoppingLines(){
   const r = recipe(); const po = portions();
-  const lunch = Object.entries(r.items).map(([id,g]) => { const tot=g*po.total; const i=ING[id]; return {key:'L-'+id, n:i.n, q: grams(tot)+(i.unitG?` (≈ ${Math.ceil(tot/i.unitG)} unid)`:''), cost:priceOf(id)*tot/1000, cat:'Almuerzos'}; });
-  const st = STAPLES.map(s => { const o = S.cfg.staples[s.id]||{}; if (o.off) return null; const qty = o.qty ?? s.qty, price = o.price ?? s.price; return {key:'S-'+s.id, n:s.n, q:`${String(qty).replace('.',',')} ${s.u}`, cost:qty*price, cat:s.cat}; }).filter(Boolean);
+  const merged = {};
+  for (const x of itemsOf(r)) { if (!merged[x.id]) merged[x.id] = {id:x.id, g:0, origs:[]}; merged[x.id].g += x.g; merged[x.id].origs.push(x.orig); }
+  const lunch = Object.values(merged).map(({id,g,origs}) => { const tot=g*po.total; const i=ING[id];
+    const swapped = origs.filter(o=>o!==id);
+    return {key:'L-'+id, n:i.n, q: grams(tot)+(i.unitG?` (≈ ${Math.ceil(tot/i.unitG)} unid)`:'') + (swapped.length?` · en vez de ${swapped.map(o=>ING[o].n.toLowerCase()).join(' y ')}`:''),
+      cost:priceOf(id)*tot/1000, cat:'Almuerzos', swap: origs.map(o=>subSelect(r,o,'mini')).join('')}; });
+  const st = STAPLES.map(s => { const o = S.cfg.staples[s.id]||{}; if (o.off) return null;
+    const alt = s.alts && o.alt!=null ? s.alts[o.alt] : null;
+    const qty = o.qty ?? s.qty, price = alt ? alt.price : (o.price ?? s.price);
+    const swap = s.alts ? `<select class="sub mini" id="alt-${s.id}" data-act="salt" data-id="${s.id}" aria-label="Cambiar ${s.n}"><option value="">${alt?'Volver a: '+s.n:'¿No hay? Cambiar por…'}</option>${s.alts.map((a,i)=>`<option value="${i}" ${o.alt===i?'selected':''}>${a.n}</option>`).join('')}</select>` : '';
+    return {key:'S-'+s.id, n: alt ? alt.n : s.n, q:`${String(qty).replace('.',',')} ${s.u}` + (alt?` · en vez de ${s.n.toLowerCase()}`:''), cost:qty*price, cat:s.cat, swap}; }).filter(Boolean);
   const ex = (S.cfg.extras||[]).map(e => ({key:'E-'+e.id, n:e.n, q:'', cost:+e.cost||0, cat:'Otros'}));
   return [...lunch, ...st, ...ex];
 }
@@ -617,7 +720,7 @@ function vMercado(){
   const checks = S.buy.checks||{};
   const doneCount = lines.filter(l=>checks[l.key]).length;
   const cats = [...new Set(lines.map(l=>l.cat))];
-  const list = cats.map(c => `<div class="stack" style="gap:0"><span class="label" style="margin-top:14px">${c==='Almuerzos'?'Para el almuerzo del sábado':c}</span><div class="list">${lines.filter(l=>l.cat===c).map(l=>`<label class="it${checks[l.key]?' done':''}"><input type="checkbox" id="ck-${l.key}" data-act="check" data-key="${l.key}" ${checks[l.key]?'checked':''}><span><span class="nm">${esc(l.n)}</span>${l.q?`<br><span class="q">${l.q}</span>`:''}</span><span class="c">${money(l.cost)}</span></label>`).join('')}</div></div>`).join('');
+  const list = cats.map(c => `<div class="stack" style="gap:0"><span class="label" style="margin-top:14px">${c==='Almuerzos'?'Para el almuerzo del sábado':c}</span><div class="list">${lines.filter(l=>l.cat===c).map(l=>`<div class="it${checks[l.key]?' done':''}"><input type="checkbox" id="ck-${l.key}" data-act="check" data-key="${l.key}" ${checks[l.key]?'checked':''}><div style="min-width:0"><label for="ck-${l.key}" class="nm">${esc(l.n)}</label>${l.q?`<br><span class="q">${l.q}</span>`:''}${l.swap?`<div>${l.swap}</div>`:''}</div><span class="c">${money(l.cost)}</span></div>`).join('')}</div></div>`).join('');
   const stEdit = STAPLES.map(s => { const o=S.cfg.staples[s.id]||{}; return `<div class="edit"><span class="nm" style="${o.off?'text-decoration:line-through;color:var(--muted)':''}">${s.n} <span class="small muted">(${s.u})</span></span><input type="number" step="any" min="0" id="sq-${s.id}" data-act="sqty" data-id="${s.id}" value="${o.qty ?? s.qty}" aria-label="Cantidad de ${s.n}"><input type="number" step="any" min="0" id="sp-${s.id}" data-act="sprice" data-id="${s.id}" value="${o.price ?? s.price}" aria-label="Precio por ${s.u} de ${s.n}"><button class="x ghost" data-act="soff" data-id="${s.id}" title="${o.off?'Volver a incluir':'No comprar esta semana'}">${o.off?'↺':'✕'}</button></div>`; }).join('');
   const ingEdit = Object.entries(ING).map(([id,i]) => `<div class="edit" style="grid-template-columns:minmax(0,1fr) 130px"><span class="nm">${i.n}</span><input type="number" step="any" min="0" id="ip-${id}" data-act="iprice" data-id="${id}" value="${priceOf(id)}" aria-label="Precio por kg de ${i.n}"></div>`).join('');
   const extras = (S.cfg.extras||[]).map(e=>`<div class="edit" style="grid-template-columns:minmax(0,1fr) 120px 40px"><span class="nm">${esc(e.n)}</span><span class="num" style="text-align:right">${money(+e.cost||0)}</span><button class="x ghost" data-act="exdel" data-id="${e.id}" title="Quitar">✕</button></div>`).join('');
@@ -746,12 +849,18 @@ document.addEventListener('click', async e => {
     const r = a==='login' ? await sb.auth.signInWithPassword({email,password}) : await sb.auth.signUp({email,password,options:{emailRedirectTo:location.href.split('#')[0]}});
     b.disabled=false;
     if (r.error){ toast(authMsg(r.error)); return; }
-    if (a==='signup' && !r.data.session){ toast('Te enviamos un correo para confirmar la cuenta'); return; }
+    if (a==='signup' && !r.data.session){ ui.signup=false; render(); toast('Te enviamos un correo para confirmar la cuenta'); return; }
     ui.account=false; toast('Sesión iniciada'); render(); return;
   }
   if (a==='forgot'){ const email=val('em'); if(!email){ toast('Escribe tu correo arriba'); return; } const r=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href.split('#')[0]}); toast(r.error?authMsg(r.error):'Te enviamos un correo para cambiar la contraseña'); return; }
   if (a==='setpass'){ const pw=(document.getElementById('newpwd')||{}).value||''; const r=await sb.auth.updateUser({password:pw}); if(r.error){toast(authMsg(r.error));return;} ui.recover=false; ui.account=false; toast('Contraseña actualizada'); render(); return; }
-  if (a==='logout'){ await sb.auth.signOut(); user=null; ui.account=false; startCloud(); toast('Sesión cerrada. Los datos siguen en este celular.'); return; }
+  if (a==='mode'){ ui.signup=!ui.signup; render(); return; }
+  if (a==='logout'){
+    await sb.auth.signOut(); user=null; ui.account=false; loadedOnce=false;
+    try { localStorage.removeItem(LS); } catch(e) {}
+    S.cfg = clone(DEFAULT_CFG); S.buy = {checks:{}}; S.prog = {entries:[]}; for (const k in last) delete last[k];
+    startCloud(); toast('Sesión cerrada'); return;
+  }
   if (a==='person'){ ui.person=b.dataset.id; saveUi(); render(); }
   else if (a==='train'){ ui.train=b.dataset.v; saveUi(); render(); }
   else if (a==='lunch'){ S.cfg.lunchId=b.dataset.id; queue('cfg'); render(); toast('Almuerzo de la semana actualizado'); }
@@ -781,7 +890,15 @@ document.addEventListener('click', async e => {
 document.addEventListener('change', e => {
   const el = e.target; const a = el.dataset && el.dataset.act; if (!a) return;
   if (a==='check'){ S.buy.checks = {...(S.buy.checks||{}), [el.dataset.key]: el.checked}; if(!el.checked) delete S.buy.checks[el.dataset.key]; queue('buy'); render(); return; }
-  if (a==='days'){ S.cfg.days=+el.value; }
+  if (a==='sub'){
+    const rid=el.dataset.rid, orig=el.dataset.ing, v=el.value;
+    S.cfg.subs = S.cfg.subs || {}; const m = {...(S.cfg.subs[rid]||{})};
+    if (v===orig) delete m[orig]; else m[orig]=v;
+    S.cfg.subs = {...S.cfg.subs, [rid]: m};
+    toast(v===orig ? 'Volvió al ingrediente original' : `Cambiado por ${ING[v].n}`);
+  }
+  else if (a==='salt'){ const o={...(S.cfg.staples[el.dataset.id]||{})}; if (el.value==='') delete o.alt; else o.alt=+el.value; S.cfg.staples[el.dataset.id]=o; }
+  else if (a==='days'){ S.cfg.days=+el.value; }
   else if (a==='childFactor'){ S.cfg.childFactor=+el.value; }
   else if (a==='budget'){ S.cfg.budget=Math.max(0,+el.value||0); }
   else if (a==='currency'){ S.cfg.currency=el.value; toast('Recuerden poner los precios en '+el.value); }
