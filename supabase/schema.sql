@@ -42,6 +42,6 @@ exception when duplicate_object then null; end $$;
 
 -- 👇 CAMBIA ESTOS CORREOS por el tuyo y el de tu esposo
 insert into cocina_familia (email) values
-  ('valentinaescobar@utp.edu.co'),
-  ('eng.otalvaro@gmail.com')
+  ('correo-de-ella@ejemplo.com'),
+  ('correo-de-el@ejemplo.com')
 on conflict do nothing;
